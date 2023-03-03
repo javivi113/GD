@@ -23,7 +23,7 @@ public class Movement : MonoBehaviour
     private Sprite Ship_Sprite;
     private Sprite Flappy_Sprite;
 
-    int Gravity = 1;
+    public int Gravity = 1;
 
     Rigidbody2D rb;
 
@@ -43,6 +43,20 @@ public class Movement : MonoBehaviour
         Invoke(CurrentGamemode.ToString(),0);
 
     }
+    public void Jump(float boost)
+    {
+        if (boost == 0)
+        {
+            rb.velocity = Vector2.zero;
+            rb.AddForce(Vector2.up * 26.6581f * Gravity, ForceMode2D.Impulse);
+        }
+        else
+        {
+            rb.velocity = Vector2.zero;
+            rb.AddForce(Vector2.up * 26.6581f * boost * Gravity, ForceMode2D.Impulse);
+        }
+        
+    }
 
     void Cube()
     {
@@ -58,8 +72,7 @@ public class Movement : MonoBehaviour
 
             if (Input.GetMouseButton(0))
             {
-                rb.velocity = Vector2.zero;
-                rb.AddForce(Vector2.up * 26.6581f * Gravity, ForceMode2D.Impulse);
+                Jump(0);
             }
         }
         else
@@ -71,8 +84,8 @@ public class Movement : MonoBehaviour
     {
         transform.position += Vector3.right * MovementSpeed[(int)CurrentSpeed] * Time.deltaTime;
 
-        if (rb.velocity.y < -24.2f)
-            rb.velocity = new Vector2(rb.velocity.x, -24.2f);
+        if (rb.velocity.y < -34.2f)
+            rb.velocity = new Vector2(rb.velocity.x, -34.2f);
         
         Vector3 Rotation = Sprite.rotation.eulerAngles;
         Rotation.z = Mathf.Round(Rotation.z / 90) * 90;
@@ -81,7 +94,7 @@ public class Movement : MonoBehaviour
         {
             isMouseButtonPressed = true;
             rb.velocity = Vector2.zero;
-            rb.AddForce(Vector2.up * 18.6581f * Gravity, ForceMode2D.Impulse);
+            rb.AddForce(Vector2.up * 12.6581f * Gravity, ForceMode2D.Impulse);
         }
         else if (Input.GetMouseButtonUp(0))
         {
@@ -98,7 +111,7 @@ public class Movement : MonoBehaviour
         if (OnGround())
         {
             Vector3 Rotation = Sprite.rotation.eulerAngles;
-            Rotation.z = Mathf.Round(Rotation.z / 90) * 90;
+            Rotation.z = Mathf.Round(Rotation.z / -90) * 90;
             Sprite.rotation = Quaternion.Euler(Rotation);
 
             if (Input.GetMouseButton(0))
@@ -170,13 +183,12 @@ public class Movement : MonoBehaviour
                     case GameModes.FlappyBird:
                         //Sprite Cube; // The new sprite you want to use
                         //spriteRenderer.sprite = Cube;
-                        break;
-                    
+                        break;                   
                 }
                 break;
             case 2:
                 Gravity = gravity;
-                rb.gravityScale = Mathf.Abs(rb.gravityScale) * Gravity;
+                rb.gravityScale = Mathf.Abs(rb.gravityScale);
                 break;
 
         }
