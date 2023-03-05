@@ -23,27 +23,31 @@ public class Movement : MonoBehaviour
     public Sprite Ship_Sprite;
     public Sprite Flappy_Sprite;
     public int Gravity = 1;
+    float gScale = 0;
     Rigidbody2D rb;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        gScale = rb.gravityScale;
     }
     void Update()
     {
         transform.position += Vector3.right * MovementSpeed[(int)CurrentSpeed] * Time.deltaTime;
-
+        
         if (rb.velocity.y < -24.2f)
             rb.velocity = new Vector2(rb.velocity.x, -24.2f);
+
         Invoke(CurrentGamemode.ToString(),0);
     }
-    public void Jump()
+    public void Jump(float boost)
     {   
         rb.velocity = Vector2.zero;
-        rb.AddForce(Vector2.up * 26.6581f * Gravity, ForceMode2D.Impulse);
+        rb.AddForce(Vector2.up * 26.6581f * boost * Gravity, ForceMode2D.Impulse);
         
     }
     void Cube()
     {
+        rb.gravityScale= gScale;
         
         if (OnGround())
         {
@@ -53,7 +57,7 @@ public class Movement : MonoBehaviour
 
             if (Input.GetMouseButton(0))
             {
-                Jump();
+                Jump(1f);
             }
         }
         else
