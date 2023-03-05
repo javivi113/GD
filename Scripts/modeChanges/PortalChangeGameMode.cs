@@ -10,7 +10,7 @@ public class PortalChangeGameMode : MonoBehaviour
         try
         {
             Movement movement = collision.gameObject.GetComponent<Movement>();
-            movement.ChangeModePortal(gameModes, 0, 0, 1);
+            movement.ChangeGameMode(gameModes);
         }
         catch { }
     }

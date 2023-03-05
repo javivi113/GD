@@ -12,17 +12,17 @@ public class JumpColision : MonoBehaviour
 
         try
         {
-            Movement movement = collision.gameObject.GetComponent<Movement>();
-            switch (jumpType)
-            {
-                case JumpType.JumpImpulse:                    
-                    movement.Jump(1.5f);
-                    break; 
-                case JumpType.GravityChange:
-                    movement.Gravity = movement.Gravity * (-1);
-                    movement.ChangeModePortal(0, 0, movement.Gravity, 2);
-                    break;
-            }
+            //Movement movement = collision.gameObject.GetComponent<Movement>();
+            //switch (jumpType)
+            //{
+            //    case JumpType.JumpImpulse:                    
+            //        movement.Jump();
+            //        break; 
+            //    case JumpType.GravityChange:
+            //        movement.Gravity = movement.Gravity * (-1);
+            //        movement.ChangeModePortal(0, 0, movement.Gravity, 2);
+            //        break;
+            //}
         }
         catch { }
     }

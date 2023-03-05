@@ -11,7 +11,7 @@ public class PortalChangeGravity : MonoBehaviour
         {
             Movement movement = collision.gameObject.GetComponent<Movement>();
 
-            movement.ChangeModePortal(0, 0, Gravity ? 1 : -1, 2);
+            movement.ChangeGravity(Gravity ? 1 : -1);
         }
         catch { }
     }

@@ -11,7 +11,7 @@ public class PortalChangeSpeed : MonoBehaviour
         {
             Movement movement = collision.gameObject.GetComponent<Movement>();
 
-            movement.ChangeModePortal(0, Speed, 0, 0);
+            movement.ChangeSpeed(Speed);
         }
         catch { }
     }
