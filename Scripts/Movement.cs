@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
+
 
 public enum Speeds { Slow = 0, Normal = 1, Fast = 2, Faster = 3, Insane = 4 };
-public enum GameModes { Cube = 0, Ship = 1, FlappyBird = 2 , BackWards};
+public enum GameModes { Cube = 0, Ship = 1, FlappyBird = 2 , BackWards=3, Cube_Invert=4};
 //public enum Gravity { Normal = 1, Invertido = -1 };
 
 public class Movement : MonoBehaviour
@@ -36,17 +38,28 @@ public class Movement : MonoBehaviour
     public Sprite Ship_Rev_Sprite;
     public Sprite Flappy_Rev_Sprite;
     public TMP_Text AttempsText;
+    public Sprite imgsBack1;
+    public Image imageComponent;
+
+    public GameObject textRemover;
+    public GameObject PausaPanel;
 
     int idElemt;
     ArrayList spawnPosis;
     ArrayList spawnPosisGameMode;
     ArrayList spawnPosisSpeed;
-
+    
+    bool ballCheckOnce;
+    bool pauseState;
 
     float gScale = 0;
     Rigidbody2D rb;
+    Vector3 pausePosition;
     void Start()
     {
+        PausaPanel.SetActive(false);
+        pauseState = false;
+        ballCheckOnce = true;
         spawnPosis = new ArrayList();
         spawnPosisGameMode= new ArrayList();
         spawnPosisSpeed = new ArrayList();
@@ -60,6 +73,7 @@ public class Movement : MonoBehaviour
         gScale = rb.gravityScale;
         AttempsText.text = "Attempt " + attempts;
         Debug.Log(AttempsText.color);
+        pausePosition = player.position;
         Vector3 aPosis = player.position;
         spawnPosis.Add(aPosis);
         spawnPosisGameMode.Add(CurrentGamemode);
@@ -68,6 +82,9 @@ public class Movement : MonoBehaviour
     }
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape)) 
+            Pause();
+
         if (movible)
         {
             transform.position += Vector3.right * MovementSpeed[(int)CurrentSpeed] * Time.deltaTime;
@@ -84,11 +101,30 @@ public class Movement : MonoBehaviour
         }
        
     }
+    public void Pause()
+    {
+        if (pauseState)
+        {
+            PausaPanel.SetActive(false);
+            Debug.Log("Unpause");
+            pauseState = false;
+            movible = true;
+            player.position = (Vector3)pausePosition;
+        }
+        else
+        {
+            pausePosition = player.position;
+            PausaPanel.SetActive(true);
+            Debug.Log("Pause");
+            pauseState = true;
+            movible = false;
+        }
+    }
+    
     public void Jump(float boost)
-    {   
+    {
         rb.velocity = Vector2.zero;
-        rb.AddForce(Vector2.up * 26.6581f * boost * Gravity, ForceMode2D.Impulse);
-        
+        rb.AddForce(Vector2.up * 26.6581f * boost, ForceMode2D.Impulse);
     }
     void Cube()
     {
@@ -105,6 +141,28 @@ public class Movement : MonoBehaviour
         else
         {
             Sprite.Rotate(Vector3.back, 452.4152186f * Time.deltaTime * Gravity);
+        }
+    }
+    public void Jump_Invert(float boost)
+    {
+        rb.velocity = Vector2.zero;
+        rb.AddForce(Vector2.down * 26.6581f * boost, ForceMode2D.Impulse);
+    }
+    void Cube_Invert()
+    {
+        rb.gravityScale = -gScale; // cambiar gScale a -gScale para invertir la gravedad
+
+        if (OnGround())
+        {
+            Vector3 Rotation = Sprite.rotation.eulerAngles;
+            Rotation.z = Mathf.Round(Rotation.z / (-90)) * 90;
+            Sprite.rotation = Quaternion.Euler(Rotation);
+            if (Input.GetMouseButton(0))
+                Jump_Invert(1f);
+        }
+        else
+        {
+            Sprite.Rotate(Vector3.back, 452.4152186f * Time.deltaTime ); // cambiar Gravity a -Gravity
         }
     }
     void FlappyBird()
@@ -170,18 +228,15 @@ public class Movement : MonoBehaviour
     public void Die()
     {
         movible = false;
-        //transform.position += Vector3.right * MovementSpeed[(int)CurrentSpeed] * Time.deltaTime;
         attempts++;
         StartCoroutine(Timeout_BackToStart());  
-        
-        //UnityEditor.EditorApplication.isPlaying = false;
     }
     IEnumerator Timeout_BackToStart()
     {
         yield return new WaitForSeconds(0.75f);
         player.position = (Vector3)spawnPosis[spawnPosis.Count-1];
         movible = true;
-        if (spawnPosis.Count == 1)
+        if (checkpointMode)
         {
             CurrentGamemode = StartingGameMode;
             CurrentSpeed = StartingSpeed;
@@ -197,8 +252,16 @@ public class Movement : MonoBehaviour
             ChangeSpeed(CurrentSpeed);
             ChangeGravity(5);
         }
-        
+       if(player.position.x < 240.5 && player.position.x > 288.9)
+        {
+            imageComponent.sprite = imgsBack1;
+            imageComponent.type = Image.Type.Simple;
+            imageComponent.preserveAspect = false;
+        }
+
         AttempsText.text = "Attempt " + attempts;
+        textRemover.transform.position = new Vector3(player.position.x + 20f, textRemover.transform.position.y, textRemover.transform.position.z);
+
     }
     public void ChangeGameMode(GameModes Gamemode)
     {
@@ -219,6 +282,9 @@ public class Movement : MonoBehaviour
                     mySprite.GetComponent<SpriteRenderer>().sprite = Flappy_Sprite;
                 else
                     mySprite.GetComponent<SpriteRenderer>().sprite = Flappy_Rev_Sprite;
+                break;
+            case GameModes.Cube_Invert:
+                mySprite.GetComponent<SpriteRenderer>().sprite = Cube_Sprite;
                 break;
         }
     }
@@ -246,20 +312,53 @@ public class Movement : MonoBehaviour
         switch (collision.gameObject.tag)
         {
             case "JumpBall":
-                if (Input.GetMouseButton(0))
+                if (Input.GetMouseButton(0) && ballCheckOnce)
+                {
+                    ballCheckOnce = false;
                     Jump(1.2f);
+                }
                 break;
-            //case "GravityBall":
-            //    if (Input.GetMouseButton(0))
-            //        ChangeGravity(1);
-            //    break;
-            //case "0GravityDash":
-            //    Debug.Log("No Gravity dash");
-            //    ChangeGravity(-1);
-            //    //if (Input.GetMouseButton(0))
-            //    //    noGravityDash();
+            case "GravityBall":
+                if (Input.GetMouseButton(0) && ballCheckOnce)
+                {
+                    ballCheckOnce = false;
+                    changeCubeCubeInvert();
+                }
+                break;
+                //case "0GravityDash":
+                //    Debug.Log("No Gravity dash");
+                //    ChangeGravity(-1);
+                //    //if (Input.GetMouseButton(0))
+                //    //    noGravityDash();
 
-            //    break;
+                //    break;
+        }
+    }
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        switch (collision.gameObject.tag)
+        {
+            case "GravityBall":
+                ballCheckOnce = true;
+                break;
+            case "JumpBall":
+                ballCheckOnce = true;
+                break;
+        }
+    }
+    public void changeCubeCubeInvert()
+    {
+        if (CurrentGamemode < (GameModes)4)
+        {
+            Jump(0.5f);
+            GameModes gm = (GameModes)4;
+            ChangeGameMode(gm);
+        }
+        else if (CurrentGamemode == (GameModes)4)
+        {
+            Jump_Invert(0.5f);
+            GameModes gm = (GameModes)0;
+            ChangeGameMode(gm);
         }
     }
     private void addCheckpoint()
@@ -288,6 +387,10 @@ public class Movement : MonoBehaviour
             GameObject delete = GameObject.Find("CheckPoint_"+idElemt+"");
             Destroy(delete);
         }
+    }
+    public void End()
+    {
+        movible = false;  
     }
 
 }
