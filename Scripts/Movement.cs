@@ -57,6 +57,7 @@ public class Movement : MonoBehaviour
     Vector3 pausePosition;
     void Start()
     {
+        checkpointMode = OptionMenu.godMode;
         PausaPanel.SetActive(false);
         pauseState = false;
         ballCheckOnce = true;
@@ -120,7 +121,6 @@ public class Movement : MonoBehaviour
             movible = false;
         }
     }
-    
     public void Jump(float boost)
     {
         rb.velocity = Vector2.zero;
@@ -325,6 +325,13 @@ public class Movement : MonoBehaviour
                     changeCubeCubeInvert();
                 }
                 break;
+            case "JumpBallInvert":
+                if (Input.GetMouseButton(0) && ballCheckOnce)
+                {
+                    ballCheckOnce = false;
+                    Jump_Invert(1.2f);
+                }
+                break;
                 //case "0GravityDash":
                 //    Debug.Log("No Gravity dash");
                 //    ChangeGravity(-1);
@@ -390,7 +397,14 @@ public class Movement : MonoBehaviour
     }
     public void End()
     {
-        movible = false;  
+        movible = false;
+        StartCoroutine(returnMenu());
     }
+    IEnumerator returnMenu()
+    {
+        yield return new WaitForSeconds(2f);
+        SceneManager.LoadScene(0);
 
+
+    }
 }

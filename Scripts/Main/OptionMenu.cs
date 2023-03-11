@@ -5,7 +5,7 @@ using TMPro;
 public class OptionMenu : MonoBehaviour
 {
     public TMP_Text txt;
-    bool godMode = false;
+    public static bool godMode = false;
     public void switchValueGodMode()
     {
         if(!godMode)

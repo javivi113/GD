@@ -33,6 +33,7 @@ public class LevelsMenuScript : MonoBehaviour
     {
         try
         {
+            DontDestroyOnLoad(this.gameObject);
             SceneManager.LoadScene(posi);
         }
         catch (UnityException e)

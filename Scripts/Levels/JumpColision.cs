@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class JumpColision : MonoBehaviour
 {
-    public enum JumpType{ JumpImpulse, CubeGravityChange }
+    public enum JumpType{ JumpImpulse, CubeGravityChange, JumpImpulseInvert }
     public JumpType jumpType;
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -17,6 +17,9 @@ public class JumpColision : MonoBehaviour
             {
                 case JumpType.JumpImpulse:
                     movement.Jump(1.4f);
+                    break;
+                case JumpType.JumpImpulseInvert:
+                    movement.Jump_Invert(1.4f);
                     break;
                 case JumpType.CubeGravityChange:
                     movement.changeCubeCubeInvert();

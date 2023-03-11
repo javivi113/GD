@@ -9,6 +9,13 @@ public class PauseMenu : MonoBehaviour
     public TMP_Text txt;
     // bool godMode = false;
     public Movement mov;
+    void Start()
+    {
+        if (mov.checkpointMode)
+            txt.text = "God mode on";
+        else
+            txt.text = "God mode off";
+    }
     public void reanudar()
     {
         mov.Pause();
