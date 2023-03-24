@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 
 public enum Speeds { Slow = 0, Normal = 1, Fast = 2, Faster = 3, Insane = 4 };
-public enum GameModes { Cube = 0, Ship = 1, FlappyBird = 2 , BackWards=3, Cube_Invert=4};
+public enum GameModes { Cube = 0, Ship = 1, FlappyBird = 2 , BackWards=3, Cube_Invert=4, Arrow=5};
 //public enum Gravity { Normal = 1, Invertido = -1 };
 
 public class Movement : MonoBehaviour
@@ -41,6 +41,13 @@ public class Movement : MonoBehaviour
     public Sprite imgsBack1;
     public Image imageComponent;
 
+    [SerializeField] public AudioSource BackgroundMusic;
+    [SerializeField] public AudioSource jumpEffect;
+    [SerializeField] public AudioSource dieEffect;
+    [SerializeField] public AudioSource winEffect;
+    [SerializeField] public AudioSource ChangeToFlappyEffect;
+    [SerializeField] public AudioSource ChangeToShipEffect;
+    [SerializeField] public AudioSource invertEffect;
     public GameObject textRemover;
     public GameObject PausaPanel;
 
@@ -57,6 +64,7 @@ public class Movement : MonoBehaviour
     Vector3 pausePosition;
     void Start()
     {
+        Time.timeScale = 1f;
         checkpointMode = OptionMenu.godMode;
         PausaPanel.SetActive(false);
         pauseState = false;
@@ -73,7 +81,6 @@ public class Movement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         gScale = rb.gravityScale;
         AttempsText.text = "Attempt " + attempts;
-        Debug.Log(AttempsText.color);
         pausePosition = player.position;
         Vector3 aPosis = player.position;
         spawnPosis.Add(aPosis);
@@ -90,7 +97,8 @@ public class Movement : MonoBehaviour
         {
             transform.position += Vector3.right * MovementSpeed[(int)CurrentSpeed] * Time.deltaTime;
             if (rb.velocity.y < -24.2f)
-                rb.velocity = new Vector2(rb.velocity.x, -24.2f);
+                rb.velocity = new Vector2(rb.velocity.x, -24.2f);        
+            
             Invoke(CurrentGamemode.ToString(),0);
             if (checkpointMode)
             {
@@ -102,29 +110,33 @@ public class Movement : MonoBehaviour
         }
        
     }
+    public void RestartAudio()
+    {
+        BackgroundMusic.Stop();
+        BackgroundMusic.Play();
+    }
     public void Pause()
     {
         if (pauseState)
         {
             PausaPanel.SetActive(false);
-            Debug.Log("Unpause");
-            pauseState = false;
-            movible = true;
-            player.position = (Vector3)pausePosition;
+            pauseState = false; 
+            Time.timeScale = 1f;
+            BackgroundMusic.Play();
         }
         else
         {
-            pausePosition = player.position;
+            BackgroundMusic.Stop();
             PausaPanel.SetActive(true);
-            Debug.Log("Pause");
             pauseState = true;
-            movible = false;
+            Time.timeScale = 0f;
         }
     }
     public void Jump(float boost)
     {
         rb.velocity = Vector2.zero;
         rb.AddForce(Vector2.up * 26.6581f * boost, ForceMode2D.Impulse);
+        jumpEffect.Play();  
     }
     void Cube()
     {
@@ -207,12 +219,23 @@ public class Movement : MonoBehaviour
         }
     }
     void Ship()
-    {        
+    {
         Sprite.rotation = Quaternion.Euler(0, 0, rb.velocity.y * 2);
         if (Input.GetMouseButton(0))
             rb.gravityScale = -4.314969f;
         else
             rb.gravityScale = 4.314969f;
+
+        rb.gravityScale = rb.gravityScale * Gravity;
+
+    }
+    void Arrow()
+    {
+        Sprite.rotation = Quaternion.Euler(0, 0, rb.velocity.y * 2);
+        if (Input.GetMouseButton(0))
+            Gravity = -1;
+        else
+            Gravity = 1;
 
         rb.gravityScale = rb.gravityScale * Gravity;
 
@@ -227,16 +250,20 @@ public class Movement : MonoBehaviour
     }
     public void Die()
     {
-        movible = false;
+        dieEffect.Play();
+
+        //movible = false;
+        Time.timeScale = 0.01f;
         attempts++;
         StartCoroutine(Timeout_BackToStart());  
     }
     IEnumerator Timeout_BackToStart()
     {
-        yield return new WaitForSeconds(0.75f);
+        yield return new WaitForSeconds(0.005f);
         player.position = (Vector3)spawnPosis[spawnPosis.Count-1];
-        movible = true;
-        if (checkpointMode)
+        //movible = true;
+        Time.timeScale = 1f;
+        if (!   checkpointMode)
         {
             CurrentGamemode = StartingGameMode;
             CurrentSpeed = StartingSpeed;
@@ -247,12 +274,12 @@ public class Movement : MonoBehaviour
         else
         {
             CurrentGamemode = (GameModes)spawnPosisGameMode[spawnPosisGameMode.Count-1];
-            CurrentSpeed = (Speeds)spawnPosisSpeed[spawnPosisSpeed.Count - 1];
+            CurrentSpeed = (Speeds)spawnPosisSpeed[spawnPosisSpeed.Count-1];
             ChangeGameMode(CurrentGamemode);
             ChangeSpeed(CurrentSpeed);
             ChangeGravity(5);
         }
-       if(player.position.x < 240.5 && player.position.x > 288.9)
+       if(player.position.x < 240.5 || player.position.x > 288.9)
         {
             imageComponent.sprite = imgsBack1;
             imageComponent.type = Image.Type.Simple;
@@ -261,7 +288,8 @@ public class Movement : MonoBehaviour
 
         AttempsText.text = "Attempt " + attempts;
         textRemover.transform.position = new Vector3(player.position.x + 20f, textRemover.transform.position.y, textRemover.transform.position.z);
-
+        RestartAudio();
+        
     }
     public void ChangeGameMode(GameModes Gamemode)
     {
@@ -273,17 +301,33 @@ public class Movement : MonoBehaviour
                 break;
             case GameModes.Ship:
                 if (Gravity == 1)
+                {
+                    ChangeToShipEffect.Play();
                     mySprite.GetComponent<SpriteRenderer>().sprite = Ship_Sprite;
+                }
                 else
+                {
+                    invertEffect.Play();
                     mySprite.GetComponent<SpriteRenderer>().sprite = Ship_Rev_Sprite;
+                }
                 break;
             case GameModes.FlappyBird:
                 if (Gravity == 1)
+                {
+                    ChangeToFlappyEffect.Play();
                     mySprite.GetComponent<SpriteRenderer>().sprite = Flappy_Sprite;
+                }
                 else
+                {
+                    invertEffect.Play();
                     mySprite.GetComponent<SpriteRenderer>().sprite = Flappy_Rev_Sprite;
+                }
                 break;
             case GameModes.Cube_Invert:
+                invertEffect.Play();
+                mySprite.GetComponent<SpriteRenderer>().sprite = Cube_Sprite;
+                break;
+            case GameModes.Arrow:
                 mySprite.GetComponent<SpriteRenderer>().sprite = Cube_Sprite;
                 break;
         }
@@ -315,7 +359,7 @@ public class Movement : MonoBehaviour
                 if (Input.GetMouseButton(0) && ballCheckOnce)
                 {
                     ballCheckOnce = false;
-                    Jump(1.2f);
+                    Jump(1.3f);
                 }
                 break;
             case "GravityBall":
@@ -397,6 +441,7 @@ public class Movement : MonoBehaviour
     }
     public void End()
     {
+        winEffect.Play();
         movible = false;
         StartCoroutine(returnMenu());
     }
